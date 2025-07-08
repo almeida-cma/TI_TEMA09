@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliação - Fundamentos de TI</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #27ae60;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: var(--secondary-color);
+            margin-top: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        .question {
+            background-color: var(--light-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .question:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .question-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .vf-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .mcq-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .option {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .option.selected {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .option.correct {
+            background-color: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+        
+        .option.incorrect {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        
+        .open-answer {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+            margin-top: 10px;
+        }
+        
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .results {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--light-color);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .results h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+        
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .feedback {
+            margin-top: 20px;
+        }
+        
+        .feedback-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .feedback-item:last-child {
+            border-bottom: none;
+        }
+        
+        .suggested-answer {
+            background-color: #e8f4f8;
+            padding: 10px;
+            border-left: 4px solid var(--secondary-color);
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background-color: var(--secondary-color);
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .vf-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Avaliação – Fundamentos de Tecnologia da Informação</h1>
+            <p>Responda todas as questões e verifique seu desempenho ao final</p>
+        </header>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        
+        <h2>I. Verdadeiro ou Falso</h2>
+        <p>Cada item possui 3 afirmações. Escolha a alternativa (A-E) que representa a sequência correta (V para Verdadeiro, F para Falso).</p>
+        
+        <div class="question" id="q1">
+            <div class="question-number">1</div>
+            <p><strong>Sobre a evolução dos computadores:</strong></p>
+            <p>I. A 1ª geração utilizava válvulas e teve como exemplo o ENIAC.</p>
+            <p>II. A 3ª geração foi marcada pelos microprocessadores.</p>
+            <p>III. A 5ª geração envolve conceitos como inteligência artificial e computação quântica.</p>
+            
+            <div class="vf-options">
+                <div class="option" data-value="A">A) V – V – F</div>
+                <div class="option" data-value="B">B) V – F – V</div>
+                <div class="option" data-value="C">C) F – V – V</div>
+                <div class="option" data-value="D">D) F – F – V</div>
+                <div class="option" data-value="E">E) V – F – F</div>
+            </div>
+        </div>
+        
+        <div class="question" id="q2">
+            <div class="question-number">2</div>
+            <p><strong>Sobre sistemas de gestão empresarial (CRM, ERP e SCM):</strong></p>
+            <p>I. O CRM está relacionado à gestão de estoque e produção.</p>
+            <p>II. O ERP integra diversas áreas da empresa como RH, finanças e produção.</p>
+            <p>III. O SCM auxilia no controle da cadeia de suprimentos e logística.</p>
+            
+            <div class="vf-options">
+                <div class="option" data-value="A">A) F – V – V</div>
+                <div class="option" data-value="B">B) V – F – F</div>
+                <div class="option" data-value="C">C) F – F – V</div>
+                <div class="option" data-value="D">D) V – V – F</div>
+                <div class="option" data-value="E">E) F – V – F</div>
+            </div>
+        </div>
+        
+        <h2>II. Múltipla Escolha</h2>
+        <p>Marque a única alternativa correta.</p>
+        
+        <div class="question" id="q3">
+            <div class="question-number">3</div>
+            <p><strong>Qual dos itens a seguir representa um software de gestão da relação com clientes (CRM)?</strong></p>
+            
+            <div class="mcq-options">
+                <div class="option" data-value="A">A) Oracle ERP</div>
+                <div class="option" data-value="B">B) Microsoft Word</div>
+                <div class="option" data-value="C">C) Zoho CRM</div>
+                <div class="option" data-value="D">D) SAP IBP</div>
+                <div class="option" data-value="E">E) Dropbox</div>
+            </div>
+        </div>
+        
+        <div class="question" id="q4">
+            <div class="question-number">4</div>
+            <p><strong>Qual é uma característica típica da computação em nuvem em comparação ao armazenamento local?</strong></p>
+            
+            <div class="mcq-options">
+                <div class="option" data-value="A">A) Baixa escalabilidade</div>
+                <div class="option" data-value="B">B) Acesso apenas offline</div>
+                <div class="option" data-value="C">C) Dependência de hardware físico do usuário</div>
+                <div class="option" data-value="D">D) Acesso remoto e escalabilidade</div>
+                <div class="option" data-value="E">E) Capacidade de armazenamento limitada</div>
+            </div>
+        </div>
+        
+        <div class="question" id="q5">
+            <div class="question-number">5</div>
+            <p><strong>Qual das alternativas melhor descreve a diferença entre dado e informação?</strong></p>
+            
+            <div class="mcq-options">
+                <div class="option" data-value="A">A) Informação é sempre mais precisa que dado.</div>
+                <div class="option" data-value="B">B) Dado é uma informação já processada.</div>
+                <div class="option" data-value="C">C) Informação é um dado processado e interpretado.</div>
+                <div class="option" data-value="D">D) Dados e informações são equivalentes.</div>
+                <div class="option" data-value="E">E) Dados não têm relação com a realidade.</div>
+            </div>
+        </div>
+        
+        <div class="question" id="q6">
+            <div class="question-number">6</div>
+            <p><strong>Sobre segurança da informação, qual das opções abaixo apresenta uma medida preventiva?</strong></p>
+            
+            <div class="mcq-options">
+                <div class="option" data-value="A">A) Utilizar arquivos não verificados</div>
+                <div class="option" data-value="B">B) Acessar redes públicas sem autenticação</div>
+                <div class="option" data-value="C">C) Desativar o firewall para aumentar a velocidade</div>
+                <div class="option" data-value="D">D) Usar antivírus atualizado e realizar backups regulares</div>
+                <div class="option" data-value="E">E) Ignorar atualizações do sistema</div>
+            </div>
+        </div>
+        
+        <h2>III. Questões Abertas</h2>
+        <p>Responda com clareza e objetividade.</p>
+        
+        <div class="question" id="q7">
+            <div class="question-number">7</div>
+            <p><strong>Quais são os principais componentes físicos (hardware) de um computador?</strong></p>
+            <textarea class="open-answer" placeholder="Digite sua resposta aqui..."></textarea>
+            <div class="suggested-answer" style="display: none;">
+                <strong>Resposta sugerida:</strong> CPU, memória RAM, disco rígido (HD ou SSD), placa-mãe, monitor, teclado, mouse.
+            </div>
+        </div>
+        
+        <div class="question" id="q8">
+            <div class="question-number">8</div>
+            <p><strong>Cite dois exemplos de sistemas operacionais e uma função principal de um deles.</strong></p>
+            <textarea class="open-answer" placeholder="Digite sua resposta aqui..."></textarea>
+            <div class="suggested-answer" style="display: none;">
+                <strong>Resposta sugerida:</strong> Windows e Linux. O Windows gerencia recursos de hardware e permite a execução de programas com interface gráfica.
+            </div>
+        </div>
+        
+        <div class="question" id="q9">
+            <div class="question-number">9</div>
+            <p><strong>Explique, com suas palavras, o que faz um sistema ERP.</strong></p>
+            <textarea class="open-answer" placeholder="Digite sua resposta aqui..."></textarea>
+            <div class="suggested-answer" style="display: none;">
+                <strong>Resposta sugerida:</strong> Um ERP integra diferentes áreas de uma empresa (como finanças, RH, estoque) em um único sistema, facilitando o controle e a tomada de decisões.
+            </div>
+        </div>
+        
+        <div class="question" id="q10">
+            <div class="question-number">10</div>
+            <p><strong>Qual a importância da computação em nuvem no ambiente corporativo atual?</strong></p>
+            <textarea class="open-answer" placeholder="Digite sua resposta aqui..."></textarea>
+            <div class="suggested-answer" style="display: none;">
+                <strong>Resposta sugerida:</strong> A computação em nuvem permite o acesso remoto a dados e sistemas, facilita a escalabilidade de recursos e reduz a necessidade de infraestrutura física nas empresas.
+            </div>
+        </div>
+        
+        <button class="submit-btn" id="submit-btn">Verificar Respostas</button>
+        
+        <div class="results" id="results">
+            <h3>Resultado da Avaliação</h3>
+            <div class="score" id="score"></div>
+            
+            <div class="feedback" id="feedback">
+                <h3>Gabarito e Feedback</h3>
+                <div class="feedback-item" id="feedback-1">
+                    <p><strong>Questão 1:</strong> Resposta correta: <span class="correct-answer">B) V – F – V</span></p>
+                    <p>Justificativa: A primeira afirmação está correta (ENIAC usava válvulas), a segunda está errada (microprocessadores são da 4ª geração) e a terceira está correta.</p>
+                </div>
+                
+                <div class="feedback-item" id="feedback-2">
+                    <p><strong>Questão 2:</strong> Resposta correta: <span class="correct-answer">A) F – V – V</span></p>
+                    <p>Justificativa: A primeira afirmação está errada (CRM é para relacionamento com clientes, não estoque), a segunda e terceira estão corretas.</p>
+                </div>
+                
+                <div class="feedback-item" id="feedback-3">
+                    <p><strong>Questão 3:</strong> Resposta correta: <span class="correct-answer">C) Zoho CRM</span></p>
+                    <p>Justificativa: Zoho CRM é um software específico para gestão de relacionamento com clientes, enquanto as outras opções são para outros fins.</p>
+                </div>
+                
+                <div class="feedback-item" id="feedback-4">
+                    <p><strong>Questão 4:</strong> Resposta correta: <span class="correct-answer">D) Acesso remoto e escalabilidade</span></p>
+                    <p>Justificativa: A computação em nuvem se caracteriza pelo acesso remoto e pela facilidade de escalar recursos conforme a necessidade.</p>
+                </div>
+                
+                <div class="feedback-item" id="feedback-5">
+                    <p><strong>Questão 5:</strong> Resposta correta: <span class="correct-answer">C) Informação é um dado processado e interpretado</span></p>
+                    <p>Justificativa: Dados são fatos brutos, enquanto informação é o resultado do processamento e interpretação desses dados.</p>
+                </div>
+                
+                <div class="feedback-item" id="feedback-6">
+                    <p><strong>Questão 6:</strong> Resposta correta: <span class="correct-answer">D) Usar antivírus atualizado e realizar backups regulares</span></p>
+                    <p>Justificativa: Estas são medidas preventivas típicas para garantir a segurança da informação.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurações das questões
+            const correctAnswers = {
+                'q1': 'B',
+                'q2': 'A',
+                'q3': 'C',
+                'q4': 'D',
+                'q5': 'C',
+                'q6': 'D'
+            };
+            
+            // Selecionar opções
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionId = this.closest('.question').id;
+                    const optionsContainer = this.closest('.vf-options') || this.closest('.mcq-options');
+                    
+                    // Remove todas as seleções desta questão
+                    optionsContainer.querySelectorAll('.option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Adiciona seleção apenas na opção clicada
+                    this.classList.add('selected');
+                    
+                    updateProgress();
+                });
+            });
+            
+            // Mostrar respostas sugeridas para questões abertas
+            const openAnswers = document.querySelectorAll('.open-answer');
+            openAnswers.forEach(textarea => {
+                textarea.addEventListener('focus', function() {
+                    this.nextElementSibling.style.display = 'block';
+                });
+                
+                textarea.addEventListener('input', updateProgress);
+            });
+            
+            // Botão de submeter
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.addEventListener('click', function() {
+                checkAnswers();
+                showResults();
+                this.disabled = true;
+            });
+            
+            // Atualizar barra de progresso
+            function updateProgress() {
+                let answered = 0;
+                const totalQuestions = 10;
+                
+                // Verificar questões de múltipla escolha
+                const selectedOptions = document.querySelectorAll('.option.selected');
+                answered += selectedOptions.length;
+                
+                // Verificar questões abertas
+                const filledTextareas = Array.from(openAnswers).filter(ta => ta.value.trim() !== '');
+                answered += filledTextareas.length;
+                
+                // Atualizar barra de progresso
+                const progress = (answered / totalQuestions) * 100;
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+            }
+            
+            // Verificar respostas
+            function checkAnswers() {
+                for (let i = 1; i <= 6; i++) {
+                    const questionId = `q${i}`;
+                    const selectedOption = document.querySelector(`#${questionId} .option.selected`);
+                    
+                    if (selectedOption) {
+                        const userAnswer = selectedOption.getAttribute('data-value');
+                        const isCorrect = userAnswer === correctAnswers[questionId];
+                        
+                        // Marcar opção correta
+                        const correctOption = document.querySelector(`#${questionId} .option[data-value="${correctAnswers[questionId]}"]`);
+                        correctOption.classList.add('correct');
+                        
+                        // Marcar opção incorreta se aplicável
+                        if (!isCorrect) {
+                            selectedOption.classList.add('incorrect');
+                        }
+                    }
+                }
+            }
+            
+            // Mostrar resultados
+            function showResults() {
+                const results = document.getElementById('results');
+                results.style.display = 'block';
+                
+                // Calcular pontuação
+                let score = 0;
+                for (let i = 1; i <= 6; i++) {
+                    const questionId = `q${i}`;
+                    const selectedOption = document.querySelector(`#${questionId} .option.selected`);
+                    
+                    if (selectedOption && selectedOption.getAttribute('data-value') === correctAnswers[questionId]) {
+                        score++;
+                    }
+                }
+                
+                // Exibir pontuação (máx 6 pontos das questões objetivas)
+                const scoreElement = document.getElementById('score');
+                scoreElement.textContent = `Você acertou ${score} de 6 questões objetivas`;
+                
+                // Rolagem suave para os resultados
+                results.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>

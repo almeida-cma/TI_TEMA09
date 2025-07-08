@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin - Controle de Estoque</title>
+<style>
+  :root {
+    --primary-color: #3498db;
+    --secondary-color: #2980b9;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+    --success-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+  }
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  body, html {
+    height: 100%;
+    background: var(--light-color);
+    display: flex;
+  }
+  .sidebar {
+    width: 220px;
+    background-color: var(--dark-color);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 15px;
+    position: relative;
+  }
+  .sidebar h2 {
+    margin-bottom: 30px;
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+  .sidebar a {
+    display: block;
+    color: white;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+  }
+  .sidebar a:hover, .sidebar a.active {
+    background-color: var(--primary-color);
+  }
+  .logout-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    padding: 10px;
+    background-color: var(--danger-color);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .logout-btn:hover {
+    background-color: #c0392b;
+  }
+  .main {
+    flex: 1;
+    padding: 25px 30px;
+    overflow-y: auto;
+  }
+  h1 {
+    margin-bottom: 25px;
+    color: var(--dark-color);
+  }
+  /* Mensagem rápida */
+  .msg {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .msg.success {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  .msg.error {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  /* Formulários e tabelas */
+  form {
+    margin-bottom: 20px;
+    max-width: 600px;
+  }
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: var(--dark-color);
+  }
+  input, select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  button.save-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button.save-btn:hover {
+    background-color: var(--secondary-color);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+    min-width: 600px;
+  }
+  th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  th {
+    background-color: #f0f0f0;
+    font-weight: 700;
+  }
+  tr:hover {
+    background-color: #f9f9f9;
+  }
+  button.action-btn {
+    margin-right: 8px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button.edit-btn {
+    background-color: var(--warning-color);
+    color: white;
+  }
+  button.edit-btn:hover {
+    background-color: #d35400;
+  }
+  button.delete-btn {
+    background-color: var(--danger-color);
+    color: white;
+  }
+  button.delete-btn:hover {
+    background-color: #c0392b;
+  }
+</style>
+</head>
+<body>
+
+  <nav class="sidebar">
+    <h2>Painel Admin</h2>
+    <a href="#" id="link-estoque" class="active">📦 Estoque</a>
+    <a href="#" id="link-movimentacoes">🔁 Movimentações</a>
+    <a href="#" id="link-usuarios">👥 Usuários</a>
+    <button class="logout-btn" id="btnLogout">Sair</button>
+  </nav>
+
+  <main class="main">
+    <h1>Bem-vindo, <span id="adminNome"></span>!</h1>
+    <div id="conteudo">Selecione uma opção no menu à esquerda.</div>
+  </main>
+
+<script>
+  // Sessão
+  const sessionKey = "session";
+
+  // Inicializa dados para testes (somente 1x)
+  function initStorage() {
+    if (!localStorage.getItem("usuarios")) {
+      const usuariosPadrao = [
+        { id: 1, nome: "Administrador", email: "admin@teste.com", senha: "1234", tipo: "admin" },
+        { id: 2, nome: "Cliente Exemplo", email: "cliente@teste.com", senha: "1234", tipo: "cliente" }
+      ];
+      localStorage.setItem("usuarios", JSON.stringify(usuariosPadrao));
+    }
+    if (!localStorage.getItem("materiais")) {
+      const materiaisPadrao = [
+        { id: 1, nome: "Caneta Azul", estoque: 20 },
+        { id: 2, nome: "Caderno", estoque: 15 },
+        { id: 3, nome: "Borracha", estoque: 30 }
+      ];
+      localStorage.setItem("materiais", JSON.stringify(materiaisPadrao));
+    }
+    if (!localStorage.getItem("movimentacoes")) {
+      localStorage.setItem("movimentacoes", JSON.stringify([]));
+    }
+  }
+
+  // Recupera dados do localStorage
+  function getUsuarios() {
+    return JSON.parse(localStorage.getItem("usuarios") || "[]");
+  }
+  function setUsuarios(arr) {
+    localStorage.setItem("usuarios", JSON.stringify(arr));
+  }
+  function getMateriais() {
+    return JSON.parse(localStorage.getItem("materiais") || "[]");
+  }
+  function setMateriais(arr) {
+    localStorage.setItem("materiais", JSON.stringify(arr));
+  }
+  function getMovimentacoes() {
+    return JSON.parse(localStorage.getItem("movimentacoes") || "[]");
+  }
+  function setMovimentacoes(arr) {
+    localStorage.setItem("movimentacoes", JSON.stringify(arr));
+  }
+
+  // Sessão
+  function validarSessao() {
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    if (!user || user.tipo !== "admin") {
+      alert("Você precisa estar logado como administrador.");
+      window.location.href = "login_estoque.html";
+      return false;
+    }
+    document.getElementById("adminNome").textContent = user.nome;
+    return true;
+  }
+
+  function logout() {
+    localStorage.removeItem(sessionKey);
+    window.location.href = "login_estoque.html";
+  }
+
+  // Navegação
+  const links = {
+    estoque: document.getElementById("link-estoque"),
+    movimentacoes: document.getElementById("link-movimentacoes"),
+    usuarios: document.getElementById("link-usuarios"),
+  };
+  const conteudo = document.getElementById("conteudo");
+
+  function limparAtivos() {
+    Object.values(links).forEach(l => l.classList.remove("active"));
+  }
+
+  links.estoque.onclick = e => { e.preventDefault(); abrirTela("estoque"); };
+  links.movimentacoes.onclick = e => { e.preventDefault(); abrirTela("movimentacoes"); };
+  links.usuarios.onclick = e => { e.preventDefault(); abrirTela("usuarios"); };
+
+  // TELA: Estoque (CRUD materiais)
+  function abrirTelaEstoque() {
+    const materiais = getMateriais();
+    conteudo.innerHTML = `
+      <h2>Gestão de Materiais</h2>
+      <form id="formMaterial">
+        <label for="nomeMaterial">Nome do Material</label>
+        <input type="text" id="nomeMaterial" required placeholder="Ex: Caneta" />
+        <label for="estoqueMaterial">Quantidade Inicial</label>
+        <input type="number" id="estoqueMaterial" min="0" required />
+        <button class="save-btn" type="submit">Adicionar Material</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Nome</th><th>Estoque</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="listaMateriais"></tbody>
+      </table>
+      <div id="msgEstoque" class="msg"></div>
+    `;
+
+    const form = document.getElementById("formMaterial");
+    const listaMateriais = document.getElementById("listaMateriais");
+
+    form.onsubmit = e => {
+      e.preventDefault();
+      const nome = document.getElementById("nomeMaterial").value.trim();
+      const estoque = parseInt(document.getElementById("estoqueMaterial").value);
+      if(!nome || isNaN(estoque) || estoque < 0) {
+        mostrarMsg("Preencha os campos corretamente.", false, "msgEstoque");
+        return;
+      }
+      let mats = getMateriais();
+      const existe = mats.find(m => m.nome.toLowerCase() === nome.toLowerCase());
+      if(existe) {
+        mostrarMsg("Material já cadastrado.", false, "msgEstoque");
+        return;
+      }
+      const novoId = mats.length ? Math.max(...mats.map(m => m.id)) + 1 : 1;
+      mats.push({ id: novoId, nome, estoque });
+      setMateriais(mats);
+      listarMateriais();
+      form.reset();
+      mostrarMsg("Material adicionado com sucesso!", true, "msgEstoque");
+    };
+
+    function listarMateriais() {
+      const mats = getMateriais();
+      if(mats.length === 0) {
+        listaMateriais.innerHTML = `<tr><td colspan="4">Nenhum material cadastrado.</td></tr>`;
+        return;
+      }
+      listaMateriais.innerHTML = mats.map(m => `
+        <tr>
+          <td>${m.id}</td>
+          <td>${m.nome}</td>
+          <td>${m.estoque}</td>
+          <td>
+            <button class="action-btn edit-btn" onclick="editarMaterial(${m.id})">Editar</button>
+            <button class="action-btn delete-btn" onclick="excluirMaterial(${m.id})">Excluir</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // Variáveis para edição
+    let editId = null;
+
+    window.editarMaterial = function(id) {
+      const mats = getMateriais();
+      const m = mats.find(x => x.id === id);
+      if(!m) return;
+      document.getElementById("nomeMaterial").value = m.nome;
+      document.getElementById("estoqueMaterial").value = m.estoque;
+      editId = id;
+      form.querySelector("button").textContent = "Salvar Alteração";
+    };
+
+    window.excluirMaterial = function(id) {
+      if(!confirm("Deseja realmente excluir este material?")) return;
+      let mats = getMateriais();
+      mats = mats.filter(x => x.id !== id);
+      setMateriais(mats);
+      listarMateriais();
+      mostrarMsg("Material excluído.", true, "msgEstoque");
+      if(editId === id) {
+        form.reset();
+        editId = null;
+        form.querySelector("button").textContent = "Adicionar Material";
+      }
+    };
+
+    form.onsubmit = e => {
+      e.preventDefault();
+      const nome = document.getElementById("nomeMaterial").value.trim();
+      const estoque = parseInt(document.getElementById("estoqueMaterial").value);
+      if(!nome || isNaN(estoque) || estoque < 0) {
+        mostrarMsg("Preencha os campos corretamente.", false, "msgEstoque");
+        return;
+      }
+      let mats = getMateriais();
+
+      if(editId) {
+        // Editar
+        if(mats.some(m => m.nome.toLowerCase() === nome.toLowerCase() && m.id !== editId)) {
+          mostrarMsg("Já existe um material com este nome.", false, "msgEstoque");
+          return;
+        }
+        mats = mats.map(m => m.id === editId ? { id: editId, nome, estoque } : m);
+        setMateriais(mats);
+        mostrarMsg("Material atualizado com sucesso!", true, "msgEstoque");
+      } else {
+        // Adicionar
+        if(mats.some(m => m.nome.toLowerCase() === nome.toLowerCase())) {
+          mostrarMsg("Material já cadastrado.", false, "msgEstoque");
+          return;
+        }
+        const novoId = mats.length ? Math.max(...mats.map(m => m.id)) + 1 : 1;
+        mats.push({ id: novoId, nome, estoque });
+        setMateriais(mats);
+        mostrarMsg("Material adicionado com sucesso!", true, "msgEstoque");
+      }
+      form.reset();
+      editId = null;
+      form.querySelector("button").textContent = "Adicionar Material";
+      listarMateriais();
+    };
+
+    listarMateriais();
+  }
+
+  // TELA: Movimentações (exibe todas movimentações)
+  function abrirTelaMovimentacoes() {
+    const movimentacoes = getMovimentacoes();
+    const materiais = getMateriais();
+    const usuarios = getUsuarios();
+
+    conteudo.innerHTML = `
+      <h2>Histórico de Movimentações</h2>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Material</th><th>Usuário</th><th>Tipo</th><th>Quantidade</th><th>Data/Hora</th></tr>
+        </thead>
+        <tbody>
+          ${
+            movimentacoes.length === 0
+            ? `<tr><td colspan="6">Nenhuma movimentação cadastrada.</td></tr>`
+            : movimentacoes.map(m => {
+                const mat = materiais.find(x => x.id === m.materialId);
+                const user = usuarios.find(u => u.id === m.usuarioId);
+                const dt = new Date(m.dataHora).toLocaleString('pt-BR');
+                return `
+                  <tr>
+                    <td>${m.id}</td>
+                    <td>${mat ? mat.nome : "Material não encontrado"}</td>
+                    <td>${user ? user.nome : "Usuário não encontrado"}</td>
+                    <td>${m.tipo}</td>
+                    <td>${m.quantidade}</td>
+                    <td>${dt}</td>
+                  </tr>
+                `;
+              }).join("")
+          }
+        </tbody>
+      </table>
+    `;
+  }
+
+  // TELA: Usuários (CRUD completo)
+  function abrirTelaUsuarios() {
+    const usuarios = getUsuarios();
+    conteudo.innerHTML = `
+      <h2>Gestão de Usuários</h2>
+      <form id="formUsuario">
+        <label for="nomeUsuario">Nome</label>
+        <input type="text" id="nomeUsuario" required placeholder="Nome completo" />
+        <label for="emailUsuario">E-mail</label>
+        <input type="email" id="emailUsuario" required placeholder="email@exemplo.com" />
+        <label for="senhaUsuario">Senha</label>
+        <input type="password" id="senhaUsuario" required placeholder="Senha" />
+        <label for="tipoUsuario">Tipo</label>
+        <select id="tipoUsuario" required>
+          <option value="">Selecione o tipo</option>
+          <option value="admin">Administrador</option>
+          <option value="cliente">Cliente</option>
+        </select>
+        <button class="save-btn" type="submit">Adicionar Usuário</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Nome</th><th>Email</th><th>Tipo</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="listaUsuarios"></tbody>
+      </table>
+      <div id="msgUsuarios" class="msg"></div>
+    `;
+
+    const form = document.getElementById("formUsuario");
+    const listaUsuarios = document.getElementById("listaUsuarios");
+
+    form.onsubmit = e => {
+      e.preventDefault();
+      const nome = document.getElementById("nomeUsuario").value.trim();
+      const email = document.getElementById("emailUsuario").value.trim().toLowerCase();
+      const senha = document.getElementById("senhaUsuario").value;
+      const tipo = document.getElementById("tipoUsuario").value;
+
+      if(!nome || !email || !senha || !tipo) {
+        mostrarMsg("Preencha todos os campos.", false, "msgUsuarios");
+        return;
+      }
+      if(!validateEmail(email)) {
+        mostrarMsg("E-mail inválido.", false, "msgUsuarios");
+        return;
+      }
+
+      let usrs = getUsuarios();
+      if(editUserId) {
+        // Editar usuário
+        if(usrs.some(u => u.email === email && u.id !== editUserId)) {
+          mostrarMsg("Já existe usuário com este e-mail.", false, "msgUsuarios");
+          return;
+        }
+        usrs = usrs.map(u => u.id === editUserId ? { id: editUserId, nome, email, senha, tipo } : u);
+        setUsuarios(usrs);
+        mostrarMsg("Usuário atualizado com sucesso!", true, "msgUsuarios");
+      } else {
+        // Adicionar usuário
+        if(usrs.some(u => u.email === email)) {
+          mostrarMsg("E-mail já cadastrado.", false, "msgUsuarios");
+          return;
+        }
+        const novoId = usrs.length ? Math.max(...usrs.map(u => u.id)) + 1 : 1;
+        usrs.push({ id: novoId, nome, email, senha, tipo });
+        setUsuarios(usrs);
+        mostrarMsg("Usuário adicionado com sucesso!", true, "msgUsuarios");
+      }
+      form.reset();
+      editUserId = null;
+      form.querySelector("button").textContent = "Adicionar Usuário";
+      listarUsuarios();
+    };
+
+    let editUserId = null;
+
+    window.editarUsuario = function(id) {
+      const usrs = getUsuarios();
+      const u = usrs.find(x => x.id === id);
+      if(!u) return;
+      document.getElementById("nomeUsuario").value = u.nome;
+      document.getElementById("emailUsuario").value = u.email;
+      document.getElementById("senhaUsuario").value = u.senha;
+      document.getElementById("tipoUsuario").value = u.tipo;
+      editUserId = id;
+      form.querySelector("button").textContent = "Salvar Alteração";
+    };
+
+    window.excluirUsuario = function(id) {
+      if(!confirm("Deseja realmente excluir este usuário?")) return;
+      let usrs = getUsuarios();
+      usrs = usrs.filter(u => u.id !== id);
+      setUsuarios(usrs);
+      listarUsuarios();
+      mostrarMsg("Usuário excluído.", true, "msgUsuarios");
+      if(editUserId === id) {
+        form.reset();
+        editUserId = null;
+        form.querySelector("button").textContent = "Adicionar Usuário";
+      }
+    };
+
+    function listarUsuarios() {
+      const usrs = getUsuarios();
+      if(usrs.length === 0) {
+        listaUsuarios.innerHTML = `<tr><td colspan="5">Nenhum usuário cadastrado.</td></tr>`;
+        return;
+      }
+      listaUsuarios.innerHTML = usrs.map(u => `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.nome}</td>
+          <td>${u.email}</td>
+          <td>${u.tipo}</td>
+          <td>
+            <button class="action-btn edit-btn" onclick="editarUsuario(${u.id})">Editar</button>
+            <button class="action-btn delete-btn" onclick="excluirUsuario(${u.id})">Excluir</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    listarUsuarios();
+  }
+
+  // Função para exibir mensagem simples
+  function mostrarMsg(msg, sucesso = true, id = null) {
+    const el = id ? document.getElementById(id) : null;
+    if(el) {
+      el.textContent = msg;
+      el.className = sucesso ? "msg success" : "msg error";
+      setTimeout(() => {
+        el.textContent = "";
+        el.className = "msg";
+      }, 4000);
+    } else {
+      alert(msg);
+    }
+  }
+
+  // Abre tela conforme menu
+  function abrirTela(nome) {
+    limparAtivos();
+    links[nome].classList.add("active");
+    switch(nome) {
+      case "estoque": abrirTelaEstoque(); break;
+      case "movimentacoes": abrirTelaMovimentacoes(); break;
+      case "usuarios": abrirTelaUsuarios(); break;
+    }
+  }
+
+  // Inicialização
+  function init() {
+    initStorage();
+    if (!validarSessao()) return;
+    abrirTela("estoque");
+  }
+
+  document.getElementById("btnLogout").addEventListener("click", logout);
+
+  init();
+</script>
+</body>
+</html>

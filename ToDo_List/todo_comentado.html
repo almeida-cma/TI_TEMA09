@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>To-Do List CRUD</title>
+</head>
+<body>
+
+  <h1>Minha To-Do List</h1>
+
+  <!-- Campo onde o usuário digita a nova tarefa -->
+  <input id="tarefa" placeholder="Digite uma tarefa">
+
+  <!-- Botão para salvar ou atualizar a tarefa -->
+  <button onclick="salvar()">Salvar</button>
+
+  <!-- Lista onde as tarefas serão exibidas -->
+  <ul id="lista"></ul>
+
+  <script>
+    // Recupera as tarefas salvas do localStorage (ou cria lista vazia se não houver nada)
+    let tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
+
+    // Variável para armazenar o índice da tarefa que está sendo editada
+    let editando = null;
+
+    // Função para atualizar a lista visual na tela
+    function atualizar() {
+      const ul = document.getElementById("lista"); // Pega a <ul>
+      ul.innerHTML = ""; // Limpa tudo antes de redesenhar
+
+      // Para cada tarefa na lista...
+      tarefas.forEach((t, i) => {
+        const li = document.createElement("li"); // Cria item de lista <li>
+        li.textContent = t; // Coloca o texto da tarefa
+
+        // Cria o botão "Editar"
+        const editar = document.createElement("button");
+        editar.textContent = "Editar";
+        editar.onclick = () => {
+          // Ao clicar em "Editar", coloca o texto no campo de input
+          document.getElementById("tarefa").value = t;
+          // Marca qual índice está sendo editado
+          editando = i;
+        };
+
+        // Cria o botão "Excluir"
+        const excluir = document.createElement("button");
+        excluir.textContent = "Excluir";
+        excluir.onclick = () => {
+          // Remove 1 item no índice i
+          tarefas.splice(i, 1);
+          salvarStorage(); // Atualiza localStorage e tela
+        };
+
+        // Adiciona o texto, botão Editar e botão Excluir no <li>
+        li.append(" ", editar, " ", excluir);
+
+        // Adiciona esse <li> na <ul>
+        ul.appendChild(li);
+      });
+    }
+
+    // Função que é chamada ao clicar no botão "Salvar"
+    function salvar() {
+      // Pega o valor digitado no campo de texto e remove espaços
+      const texto = document.getElementById("tarefa").value.trim();
+
+      // Se estiver vazio, não faz nada
+      if (!texto) return;
+
+      // Se não estiver editando, adiciona nova tarefa
+      if (editando === null) {
+        tarefas.push(texto);
+      } else {
+        // Se estiver editando, atualiza a tarefa no índice certo
+        tarefas[editando] = texto;
+        editando = null; // Reseta o modo edição
+      }
+
+      // Limpa o campo de entrada
+      document.getElementById("tarefa").value = "";
+
+      // Salva no localStorage e atualiza a lista
+      salvarStorage();
+    }
+
+    // Função que salva no navegador e atualiza a tela
+    function salvarStorage() {
+      // Salva a lista de tarefas como texto no localStorage
+      localStorage.setItem("tarefas", JSON.stringify(tarefas));
+      // Redesenha a lista na tela
+      atualizar();
+    }
+
+    // Quando a página abre, já mostra as tarefas salvas
+    atualizar();
+  </script>
+
+</body>
+</html>

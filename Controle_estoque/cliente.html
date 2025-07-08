@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cliente - Controle de Estoque</title>
+<style>
+  :root {
+    --primary-color: #3498db;
+    --secondary-color: #2980b9;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+    --success-color: #27ae60;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+  }
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  body, html {
+    min-height: 100vh;
+    background: var(--light-color);
+    padding: 20px;
+  }
+  h1 {
+    margin-bottom: 20px;
+    color: var(--dark-color);
+  }
+  form {
+    max-width: 600px;
+    background: white;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 0 7px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--dark-color);
+  }
+  select, input[type="number"], input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  button:hover {
+    background-color: var(--secondary-color);
+  }
+  table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 0 7px rgba(0,0,0,0.1);
+  }
+  th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  th {
+    background-color: #f0f0f0;
+    font-weight: 700;
+  }
+  tr:hover {
+    background-color: #f9f9f9;
+  }
+  .msg {
+    max-width: 600px;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .msg.success {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  .msg.error {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  .logout-btn {
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .logout-btn:hover {
+    background-color: #c0392b;
+  }
+</style>
+</head>
+<body>
+
+  <h1>Bem-vindo, <span id="clienteNome"></span>!</h1>
+
+  <section id="secRequisicao">
+    <h2>Requisitar Material</h2>
+    <form id="formRequisicao">
+      <label for="materialReq">Material</label>
+      <select id="materialReq" required></select>
+      <label for="quantidadeReq">Quantidade</label>
+      <input type="number" id="quantidadeReq" min="1" required />
+      <button type="submit">Requisitar</button>
+    </form>
+    <div id="msgRequisicao" class="msg"></div>
+  </section>
+
+  <section id="secDevolucao">
+    <h2>Devolver Material</h2>
+    <form id="formDevolucao">
+      <label for="materialDev">Material</label>
+      <select id="materialDev" required></select>
+      <label for="quantidadeDev">Quantidade</label>
+      <input type="number" id="quantidadeDev" min="1" required />
+      <button type="submit">Devolver</button>
+    </form>
+    <div id="msgDevolucao" class="msg"></div>
+  </section>
+
+  <section id="secHistorico">
+    <h2>Histórico de Movimentações</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Material</th><th>Tipo</th><th>Quantidade</th><th>Data/Hora</th></tr>
+      </thead>
+      <tbody id="tbodyHistorico">
+      </tbody>
+    </table>
+  </section>
+
+  <section id="secPerfil" style="margin-top:40px; max-width:600px;">
+    <h2>Meus Dados</h2>
+    <form id="formPerfil">
+      <label for="nomeCliente">Nome</label>
+      <input type="text" id="nomeCliente" required />
+      <label for="emailCliente">E-mail</label>
+      <input type="email" id="emailCliente" required />
+      <label for="senhaCliente">Senha</label>
+      <input type="password" id="senhaCliente" required />
+      <button type="submit">Salvar Alterações</button>
+    </form>
+    <div id="msgPerfil" class="msg"></div>
+  </section>
+
+  <button class="logout-btn" id="btnLogout">Sair</button>
+
+<script>
+  const sessionKey = "session";
+
+  function getUsuarios() {
+    return JSON.parse(localStorage.getItem("usuarios") || "[]");
+  }
+  function setUsuarios(arr) {
+    localStorage.setItem("usuarios", JSON.stringify(arr));
+  }
+  function getMateriais() {
+    return JSON.parse(localStorage.getItem("materiais") || "[]");
+  }
+  function setMateriais(arr) {
+    localStorage.setItem("materiais", JSON.stringify(arr));
+  }
+  function getMovimentacoes() {
+    return JSON.parse(localStorage.getItem("movimentacoes") || "[]");
+  }
+  function setMovimentacoes(arr) {
+    localStorage.setItem("movimentacoes", JSON.stringify(arr));
+  }
+
+  function validarSessao() {
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    if(!user || user.tipo !== "cliente") {
+      alert("Você precisa estar logado como cliente.");
+      window.location.href = "login_estoque.html";
+      return false;
+    }
+    document.getElementById("clienteNome").textContent = user.nome;
+    return true;
+  }
+
+  function logout() {
+    localStorage.removeItem(sessionKey);
+    window.location.href = "login_estoque.html";
+  }
+
+  // Popula selects com materiais (estoque > 0)
+  function popularSelects() {
+    const materiais = getMateriais();
+    const selectReq = document.getElementById("materialReq");
+    const selectDev = document.getElementById("materialDev");
+    selectReq.innerHTML = "";
+    selectDev.innerHTML = "";
+
+    materiais.forEach(m => {
+      if(m.estoque > 0) {
+        selectReq.innerHTML += `<option value="${m.id}">${m.nome} (Disponível: ${m.estoque})</option>`;
+      }
+    });
+
+    // Para devolução, mostramos todos materiais que cliente já requisitou (quantidade > 0)
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    const movimentacoes = getMovimentacoes();
+    // Calcula saldo de cada material para este usuário
+    const saldo = {};
+    movimentacoes.forEach(mov => {
+      if(mov.usuarioId === user.id) {
+        saldo[mov.materialId] = (saldo[mov.materialId] || 0) + (mov.tipo === "requisicao" ? mov.quantidade : -mov.quantidade);
+      }
+    });
+    selectDev.innerHTML = "";
+    for(const [matId, qtd] of Object.entries(saldo)) {
+      if(qtd > 0) {
+        const mat = materiais.find(m => m.id === Number(matId));
+        if(mat) {
+          selectDev.innerHTML += `<option value="${mat.id}">${mat.nome} (Você possui: ${qtd})</option>`;
+        }
+      }
+    }
+  }
+
+  // Requisitar material
+  document.getElementById("formRequisicao").onsubmit = e => {
+    e.preventDefault();
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    const materialId = parseInt(document.getElementById("materialReq").value);
+    const quantidade = parseInt(document.getElementById("quantidadeReq").value);
+
+    if(isNaN(quantidade) || quantidade < 1) {
+      mostrarMsg("Quantidade inválida.", false, "msgRequisicao");
+      return;
+    }
+
+    const materiais = getMateriais();
+    const mat = materiais.find(m => m.id === materialId);
+    if(!mat) {
+      mostrarMsg("Material não encontrado.", false, "msgRequisicao");
+      return;
+    }
+    if(mat.estoque < quantidade) {
+      mostrarMsg("Quantidade requisitada maior que o estoque disponível.", false, "msgRequisicao");
+      return;
+    }
+
+    // Atualiza estoque
+    mat.estoque -= quantidade;
+    setMateriais(materiais);
+
+    // Registra movimentação
+    const movimentacoes = getMovimentacoes();
+    const novoId = movimentacoes.length ? Math.max(...movimentacoes.map(m => m.id)) + 1 : 1;
+    movimentacoes.push({
+      id: novoId,
+      usuarioId: user.id,
+      materialId: mat.id,
+      tipo: "requisicao",
+      quantidade: quantidade,
+      dataHora: new Date().toISOString()
+    });
+    setMovimentacoes(movimentacoes);
+
+    mostrarMsg("Requisição realizada com sucesso!", true, "msgRequisicao");
+    document.getElementById("formRequisicao").reset();
+    popularSelects();
+    listarHistorico();
+  };
+
+  // Devolver material
+  document.getElementById("formDevolucao").onsubmit = e => {
+    e.preventDefault();
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    const materialId = parseInt(document.getElementById("materialDev").value);
+    const quantidade = parseInt(document.getElementById("quantidadeDev").value);
+
+    if(isNaN(quantidade) || quantidade < 1) {
+      mostrarMsg("Quantidade inválida.", false, "msgDevolucao");
+      return;
+    }
+
+    // Verifica saldo do usuário para o material
+    const movimentacoes = getMovimentacoes();
+    let saldo = 0;
+    movimentacoes.forEach(mov => {
+      if(mov.usuarioId === user.id && mov.materialId === materialId) {
+        saldo += mov.tipo === "requisicao" ? mov.quantidade : -mov.quantidade;
+      }
+    });
+    if(saldo < quantidade) {
+      mostrarMsg("Quantidade maior que o saldo em posse.", false, "msgDevolucao");
+      return;
+    }
+
+    // Atualiza estoque
+    const materiais = getMateriais();
+    const mat = materiais.find(m => m.id === materialId);
+    if(!mat) {
+      mostrarMsg("Material não encontrado.", false, "msgDevolucao");
+      return;
+    }
+    mat.estoque += quantidade;
+    setMateriais(materiais);
+
+    // Registra movimentação
+    const novoId = movimentacoes.length ? Math.max(...movimentacoes.map(m => m.id)) + 1 : 1;
+    movimentacoes.push({
+      id: novoId,
+      usuarioId: user.id,
+      materialId: mat.id,
+      tipo: "devolucao",
+      quantidade: quantidade,
+      dataHora: new Date().toISOString()
+    });
+    setMovimentacoes(movimentacoes);
+
+    mostrarMsg("Devolução realizada com sucesso!", true, "msgDevolucao");
+    document.getElementById("formDevolucao").reset();
+    popularSelects();
+    listarHistorico();
+  };
+
+  // Listar histórico de movimentações do cliente
+  function listarHistorico() {
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    const movimentacoes = getMovimentacoes();
+    const materiais = getMateriais();
+    const tbody = document.getElementById("tbodyHistorico");
+
+    const movsUser = movimentacoes.filter(m => m.usuarioId === user.id);
+    if(movsUser.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">Nenhuma movimentação encontrada.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = movsUser.map(m => {
+      const mat = materiais.find(x => x.id === m.materialId);
+      const dt = new Date(m.dataHora).toLocaleString('pt-BR');
+      return `
+        <tr>
+          <td>${m.id}</td>
+          <td>${mat ? mat.nome : "Material não encontrado"}</td>
+          <td>${m.tipo === "requisicao" ? "Requisição" : "Devolução"}</td>
+          <td>${m.quantidade}</td>
+          <td>${dt}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  // Atualizar dados do cliente
+  document.getElementById("formPerfil").onsubmit = e => {
+    e.preventDefault();
+    const nome = document.getElementById("nomeCliente").value.trim();
+    const email = document.getElementById("emailCliente").value.trim().toLowerCase();
+    const senha = document.getElementById("senhaCliente").value;
+
+    if(!nome || !email || !senha) {
+      mostrarMsg("Preencha todos os campos.", false, "msgPerfil");
+      return;
+    }
+    if(!validateEmail(email)) {
+      mostrarMsg("E-mail inválido.", false, "msgPerfil");
+      return;
+    }
+
+    let usuarios = getUsuarios();
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    if(usuarios.some(u => u.email === email && u.id !== user.id)) {
+      mostrarMsg("E-mail já cadastrado por outro usuário.", false, "msgPerfil");
+      return;
+    }
+
+    usuarios = usuarios.map(u => u.id === user.id ? { ...u, nome, email, senha } : u);
+    setUsuarios(usuarios);
+
+    // Atualiza sessão
+    const userAtualizado = { ...user, nome, email, senha };
+    localStorage.setItem(sessionKey, JSON.stringify(userAtualizado));
+    document.getElementById("clienteNome").textContent = nome;
+
+    mostrarMsg("Dados atualizados com sucesso!", true, "msgPerfil");
+  };
+
+  function mostrarMsg(msg, sucesso = true, id = null) {
+    const el = id ? document.getElementById(id) : null;
+    if(el) {
+      el.textContent = msg;
+      el.className = sucesso ? "msg success" : "msg error";
+      setTimeout(() => {
+        el.textContent = "";
+        el.className = "msg";
+      }, 4000);
+    } else {
+      alert(msg);
+    }
+  }
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  // Inicialização
+  function init() {
+    if (!validarSessao()) return;
+    popularSelects();
+
+    const user = JSON.parse(localStorage.getItem(sessionKey));
+    document.getElementById("nomeCliente").value = user.nome;
+    document.getElementById("emailCliente").value = user.email;
+    document.getElementById("senhaCliente").value = user.senha;
+
+    listarHistorico();
+
+    document.getElementById("btnLogout").addEventListener("click", logout);
+  }
+
+  init();
+</script>
+
+</body>
+</html>

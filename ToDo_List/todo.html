@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>To-Do List CRUD</title>
+</head>
+<body>
+
+  <h1>Minha To-Do List</h1>
+
+  <input id="tarefa" placeholder="Digite uma tarefa">
+  <button onclick="salvar()">Salvar</button>
+
+  <ul id="lista"></ul>
+
+  <script>
+    let tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
+    let editando = null;
+
+    function atualizar() {
+      const ul = document.getElementById("lista");
+      ul.innerHTML = "";
+      tarefas.forEach((t, i) => {
+        const li = document.createElement("li");
+        li.textContent = t;
+        const editar = document.createElement("button");
+        editar.textContent = "Editar";
+        editar.onclick = () => {
+          document.getElementById("tarefa").value = t;
+          editando = i;
+        };
+        const excluir = document.createElement("button");
+        excluir.textContent = "Excluir";
+        excluir.onclick = () => {
+          tarefas.splice(i, 1);
+          salvarStorage();
+        };
+        li.append(" ", editar, " ", excluir);
+        ul.appendChild(li);
+      });
+    }
+
+    function salvar() {
+      const texto = document.getElementById("tarefa").value.trim();
+      if (!texto) return;
+      if (editando === null) tarefas.push(texto);
+      else { tarefas[editando] = texto; editando = null; }
+      document.getElementById("tarefa").value = "";
+      salvarStorage();
+    }
+
+    function salvarStorage() {
+      localStorage.setItem("tarefas", JSON.stringify(tarefas));
+      atualizar();
+    }
+
+    atualizar();
+  </script>
+
+</body>
+</html>

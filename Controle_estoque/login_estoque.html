@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login - Controle de Estoque</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #ecf0f1;
+    display: flex;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+  }
+  form {
+    background: white;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    width: 320px;
+  }
+  h2 {
+    margin-bottom: 20px;
+    color: #34495e;
+    text-align: center;
+  }
+  label {
+    font-weight: 600;
+    margin-top: 12px;
+    display: block;
+    color: #2c3e50;
+  }
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 10px 8px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    outline-offset: 2px;
+  }
+  button {
+    width: 100%;
+    margin-top: 20px;
+    background-color: #3498db;
+    border: none;
+    padding: 12px 0;
+    font-weight: 700;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  button:hover {
+    background-color: #2980b9;
+  }
+  .msg {
+    margin-top: 15px;
+    font-weight: 600;
+    color: #e74c3c;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<form id="formLogin">
+  <h2>Login Estoque</h2>
+  <label for="email">E-mail</label>
+  <input type="email" id="email" placeholder="email@exemplo.com" required />
+  <label for="senha">Senha</label>
+  <input type="password" id="senha" placeholder="Senha" required />
+  <button type="submit">Entrar</button>
+  <div id="msgLogin" class="msg"></div>
+</form>
+
+<script>
+  const sessionKey = "session";
+
+  function getUsuarios() {
+    return JSON.parse(localStorage.getItem("usuarios") || "[]");
+  }
+
+  function mostrarMsg(msg, isError = true) {
+    const el = document.getElementById("msgLogin");
+    el.textContent = msg;
+    el.style.color = isError ? "#e74c3c" : "#27ae60";
+  }
+
+  document.getElementById("formLogin").onsubmit = e => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const senha = document.getElementById("senha").value;
+
+    if (!email || !senha) {
+      mostrarMsg("Preencha todos os campos.");
+      return;
+    }
+
+    const usuarios = getUsuarios();
+    const user = usuarios.find(u => u.email === email && u.senha === senha);
+
+    if (!user) {
+      mostrarMsg("Usuário ou senha incorretos.");
+      return;
+    }
+
+    // Salva sessão
+    localStorage.setItem(sessionKey, JSON.stringify(user));
+
+    // Redireciona conforme tipo
+    if (user.tipo === "admin") {
+      window.location.href = "admin.html";
+    } else if (user.tipo === "cliente") {
+      window.location.href = "cliente.html";
+    } else {
+      mostrarMsg("Tipo de usuário inválido.");
+    }
+  };
+</script>
+
+</body>
+</html>
