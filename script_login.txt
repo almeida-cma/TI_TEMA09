@@ -1,0 +1,15 @@
+let usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+
+if (!usuarios.some(u => u.email === "admin@teste.com")) {
+  usuarios.push({
+    id: usuarios.length ? Math.max(...usuarios.map(u => u.id)) + 1 : 1,
+    nome: "Administrador",
+    email: "admin@teste.com",
+    senha: "1234",
+    tipo: "admin"
+  });
+  localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  console.log("Administrador inserido com sucesso.");
+} else {
+  console.log("Administrador já existe.");
+}
