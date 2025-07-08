@@ -7,4 +7,4 @@ Em *RELATOS DE PROFISSIONAIS DA NOSSA ÁREA.pdf* vídeos bem interessantes sobre
 
 Na pasta *Controle_estoque* temos uma ideia de aplicativos com administração e clientes. Rodar "login_estoque.html" via Live Server via VSCode.
 
-Na asta
+Na pasta "ToDo_List" exemplo javascript para trabalhos com localstorage e CRUD.
